@@ -5,6 +5,7 @@ include __DIR__ . "/../../assets/advanceSQL.php";
 
 authenticationCheck();
 
+
 $requestId = (int) ($_POST['request_id'] ?? 0);
 $type      = $_POST['type'] ?? 'text';
 $body      = $_POST['body'] ?? null;
