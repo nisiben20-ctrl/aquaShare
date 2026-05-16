@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . "/../../assets/config.php";
-include __DIR__ . "/../../ado/fxns.php";
+include __DIR__ . "/../fxns.php";
 include __DIR__ . "/../../assets/advanceSQL.php";
 
 authenticationCheck();

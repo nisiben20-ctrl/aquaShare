@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . "/../../assets/config.php";
-include __DIR__ . "/../../ado/fxns.php";
+include __DIR__ . "/../fxns.php";
 include __DIR__ . "/../../assets/advanceSQL.php";
 
 function signIn($param){
@@ -11,7 +11,7 @@ function signIn($param){
     $username = $param['email'];
     $pass = $param['password_hash'];
 
-    [$err, $result] = advanceSelect('users', "*", ['email'=>$username, 'password_hash'=>$pass]);
+    [$err, $result] = advanceSelect('user', "*", ['email'=>$username, 'password_hash'=>$pass]);
     
     // die("YOYOOY");
 
@@ -20,7 +20,7 @@ function signIn($param){
     }
 
     if(!count($result)) {
-        die(Error(2, 'Invalid credentials' . $param['email']));
+        die(Error(2, 'Invalid credentials for ' . $param['email']));
     }
 
     return $result[0]??null;
@@ -44,6 +44,8 @@ if (isset($_POST['email'], $_POST['password_hash'])) {
         }
     }
 
+    $_SESSION['user']    = $user;
+    $_SESSION['profile'] = $profile;
     echo Result("Authentication Sucessful", ['user'=>$user, 'profile'=>$profile]);
     exit(0);
 }else{

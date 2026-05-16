@@ -22,21 +22,21 @@ session_status() == PHP_SESSION_NONE && session_start();
 include "scheduler.php";
 include "accounts.php"; */
 
-const LOGDIR = __DIR__ . "/../logs";
+define("LOGDIR", __DIR__ . "/../logs");
 
 function Error(int $code, string $msg, $detail = null) {
-    global $LOGDIR;
+    if (!is_dir(LOGDIR)) mkdir(LOGDIR, 0755, true);
 
     $data = date('Y-m-d H:i:s') . " ---- " . ($detail ? json_encode($detail) : $msg) . " \n";
-    file_put_contents("$LOGDIR/error_logs.txt", $data, FILE_APPEND);
+    file_put_contents(LOGDIR."/error_logs.txt", $data, FILE_APPEND);
     return json_encode(array('error' => array('code' => $code, 'message' => $msg)));
     // return $data;
 }
 function Result(string $msg, $data) {
-    global $LOGDIR;
+    if (!is_dir(LOGDIR)) mkdir(LOGDIR, 0755, true);
     
     $dat = date('Y-m-d H:i:s') . "---" . "$msg" . " ---- " . json_encode($data) . " \n";
-    file_put_contents("$LOGDIR/message_logs.txt", $dat, FILE_APPEND);
+    file_put_contents(LOGDIR."/message_logs.txt", $dat, FILE_APPEND);
     return json_encode(array('data' => $data, 'message' => $msg));
 }
 

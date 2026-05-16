@@ -26,7 +26,7 @@
   <!-- REGISTER -->
   <div class="card">
     <h2>Register</h2>
-    <form data-endpoint="../init/auth/registration.php" data-method="POST">
+    <form data-endpoint="/php/init/auth/registration.php" data-method="POST">
       <label>Name</label><input name="name" value="Test User">
       <label>Phone</label><input name="phone" value="670000001">
       <label>Email</label><input name="email" value="test@aquashare.com">
@@ -41,7 +41,7 @@
   <!-- LOGIN -->
   <div class="card">
     <h2>Login</h2>
-    <form data-endpoint="../init/auth/index.php" data-method="POST">
+    <form data-endpoint="/php/init/auth/index.php" data-method="POST">
       <label>Email</label><input name="email" value="test@aquashare.com">
       <label>Password (hashed)</label><input name="password_hash" value="testhash123">
       <button type="submit">Send</button>
@@ -52,7 +52,7 @@
   <!-- CREATE PROFILE -->
   <div class="card">
     <h2>Create Profile</h2>
-    <form data-endpoint="../init/auth/createprofile.php" data-method="POST">
+    <form data-endpoint="/php/init/auth/createprofile.php" data-method="POST">
       <label>Address</label><input name="address" value="Dirty South, Buea">
       <label>Landmark</label><input name="landmark" value="Near the junction">
       <button type="submit">Send</button>
@@ -63,7 +63,7 @@
   <!-- SEND MESSAGE -->
   <div class="card">
     <h2>Send Message</h2>
-    <form data-endpoint="../init/communication/send.php" data-method="POST" data-multipart="1">
+    <form data-endpoint="/php/init/communication/send.php" data-method="POST" data-multipart="1">
       <label>Request ID</label><input name="request_id" value="1">
       <label>Type</label>
       <select name="type" id="msgType">
@@ -84,7 +84,7 @@
   <!-- GET MESSAGES -->
   <div class="card">
     <h2>Get Messages</h2>
-    <form data-endpoint="../init/communication/get.php" data-method="GET">
+    <form data-endpoint="/php/init/communication/get.php" data-method="GET">
       <label>Request ID</label><input name="request_id" value="1">
       <button type="submit">Send</button>
     </form>
@@ -94,7 +94,7 @@
   <!-- MARK READ -->
   <div class="card">
     <h2>Mark Messages as Read</h2>
-    <form data-endpoint="../init/communication/markread.php" data-method="POST">
+    <form data-endpoint="/php/init/communication/markread.php" data-method="POST">
       <label>Request ID</label><input name="request_id" value="1">
       <button type="submit">Send</button>
     </form>
@@ -122,10 +122,10 @@
         let res;
         if (method === 'GET') {
           const params = new URLSearchParams(new FormData(form));
-          res = await fetch(`${endpoint}?${params}`);
+          res = await fetch(`${endpoint}?${params}`, { credentials: 'include' });
         } else {
           const body = form.dataset.multipart ? new FormData(form) : new URLSearchParams(new FormData(form));
-          res = await fetch(endpoint, { method, body });
+          res = await fetch(endpoint, { method, body, credentials: 'include' });
         }
         const text = await res.text();
         try { pre.textContent = JSON.stringify(JSON.parse(text), null, 2); }

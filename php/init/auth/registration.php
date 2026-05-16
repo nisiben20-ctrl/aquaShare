@@ -1,6 +1,6 @@
 <?php
 include __DIR__ . "/../../assets/config.php";
-include __DIR__ . "/../../ado/fxns.php";
+include __DIR__ . "/../fxns.php";
 include __DIR__ . "/../../assets/advanceSQL.php";
 
 function signUp($param){
@@ -13,10 +13,10 @@ function signUp($param){
     /* $username = $param['email'];
     $pass = $param['PasswordHash']; */
 
-    $result = advanceInsert('users', $param);
+    $result = advanceInsert('user', $param);
 
     if( $result[0] ){
-        die(Error(2, 'unable to perform authentication ' . $result[0]));
+        die(Error(2, 'unable to perform registration ' . $result[0]));
     }
 
     return $result[1]??null;
@@ -26,7 +26,7 @@ if(isset($_POST) && count($_POST)){
 
     if (isset($_POST['name'], $_POST['phone'], $_POST['email'], $_POST['password_hash'], $_POST['role'])) {
         $param = [
-            'name' => $_POST['name'],
+            'full_name' => $_POST['name'],
             'phone' => $_POST['phone'],
             'email' => $_POST['email'],
             'password_hash' => $_POST['password_hash'],
