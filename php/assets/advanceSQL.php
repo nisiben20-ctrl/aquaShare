@@ -167,6 +167,13 @@ function advanceSelect($table, $selectable = '*', $condition = [], bool|mysqli $
         if( count($arr) ) $whereClauses[] = implode(" $searchConjunctor ", $arr);
     }
     
+    $not = $condition['__NOT'] ?? [];
+    foreach ($not as $key => $value) {
+        $s = " $key ";
+        $s .= is_null($value) ? "IS NOT NULL" : (is_string($value) ? "!= '$value'" : "!= $value");
+        $whereClauses[] = $s;
+    }
+
     foreach ($condition as $column => $value) {
         $found = strpos($column, "__");
         if($found===false){
@@ -175,7 +182,7 @@ function advanceSelect($table, $selectable = '*', $condition = [], bool|mysqli $
             $whereClauses[] = $s;
         }
     }
-    $whereClause = implode(' AND ', $whereClauses);
+    $whereClause = implode(' ' . ($condition['__CONJUNCTOR'] ?? 'AND') . ' ', $whereClauses);
     $where = count($whereClauses)?"WHERE":'';
 
     $query = "SELECT $selectable FROM $table $where $whereClause $orderby $limit";
@@ -250,7 +257,16 @@ function advanceUpdate($table, $param, $condition, bool|mysqli $conn = null){
         $paramClauses[] = $s;
     }
 
+    $not = $condition['__NOT'] ?? [];
+    foreach ($not as $column => $value) {
+        $Evalue = is_string($value) ? mysqli_real_escape_string($conn, $value) : $value;
+        $s = "$column ";
+        $s .= is_null($value) ? "IS NOT NULL" : (is_string($value) ? "!= '$Evalue'" : "!= $value");
+        $whereClauses[] = $s;
+    }
+
     foreach ($condition as $column => $value) {
+        if ($column === '__NOT') continue;
         $Evalue = is_string($value) ? mysqli_real_escape_string($conn, $value): $value;
         // $Evalue = mysqli_real_escape_string($conn, (string) $value);
         $s = "$column ";

@@ -1,4 +1,8 @@
 <?php
+session_status() == PHP_SESSION_NONE && session_start();
+header('Content-type: application/json');
+header('Access-Control-Allow-Origin: *');
+
 
 const DB_HOST = 'localhost',
 DB_USER = 'root',
@@ -13,20 +17,9 @@ define("ALLOWED_REF", ['localhost']);
 define("BANNED_IP", []);
 
 define("USER_INFO",  $_SESSION['user']??null);
-define("USER_AUTH", $_SESSION['permission']??null);
+define("USER_PROFILE",  $_SESSION['profile']??null);
 
 date_default_timezone_set(DEFAULT_TIMEZONE);
 
 
-/* const DB_HOST = 'srv1509.hstgr.io',
-
-define("USER_INFO",  $_SESSION['user']??null);
-define("USER_AUTH", $_SESSION['permission']??null);
-
-$boardName = "WorkSpace";
-$tasklistName = "Activity";
-$taskName = "Task";
-$checklistName = "Checklist";
-
-$checklistitemName = "Checklist Item"; */
 

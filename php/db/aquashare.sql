@@ -37,7 +37,7 @@ CREATE TABLE `user` (
   `full_name` varchar(100) NOT NULL,
   `phone` varchar(20) NOT NULL,
   `email` varchar(100) DEFAULT NULL,
-  `password_hash` varchar(255) NOT NULL,
+  `scrcpy` varchar(255) NOT NULL,
   `role` enum('resident','supplier','admin') NOT NULL DEFAULT 'resident',
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   `is_banned` tinyint(1) NOT NULL DEFAULT 0,
