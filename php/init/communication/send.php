@@ -37,7 +37,7 @@ if ($type === 'image') {
     $dest     = UPLOAD_DIR . "/messages/" . $filename;
     if (!is_dir(UPLOAD_DIR . "/messages")) mkdir(UPLOAD_DIR . "/messages", 0755, true);
     if (!move_uploaded_file($_FILES['image']['tmp_name'], $dest)) die(Error(2, "Failed to save image"));
-    $body = "messages/$filename";
+    $body = '/php/img.php?f=' . urlencode("messages/$filename");
 }
 
 // location: expect body as JSON {"lat":...,"lng":...}
@@ -48,13 +48,15 @@ if ($type === 'location') {
 
 if (empty($body)) die(Error(5, "Message body is required"));
 
-[$err, $msgId] = advanceInsert('message', [
+$data = [
     'request_id' => $requestId,
     'sender_id'  => $userId,
     'type'       => $type,
     'body'       => $body
-]);
+];
+
+[$err, $msgId] = advanceInsert('message', $data);
 
 if ($err) die(Error(2, "Could not send message: $err"));
 
-echo Result("Message sent", ['message_id' => $msgId]);
+echo Result("Message sent", ['message_id' => $msgId, ...$data]);
