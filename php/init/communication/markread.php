@@ -15,7 +15,7 @@ if ($err || !count($requests)) die(Error(1, "Request not found"));
 $req     = $requests[0];
 $userId  = USER_INFO['id'];
 // $isAdmin = USER_INFO['role'] === 'admin';
-$auth = $req['resident_id'] != $userId && $req['supplier_id'] != $userId;
+$auth = ($req['resident_id'] == $userId || $req['supplier_id'] == $userId);
 
 if ($auth) {
     die(Error(3, "Not part of this request"));

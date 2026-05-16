@@ -13,9 +13,10 @@ if (!$requestId) die(Error(5, "request_id is required"));
 if ($err || !count($requests)) die(Error(1, "Request not found"));
 
 $req    = $requests[0];
+print_r(USER_INFO);
 $userId = USER_INFO['id'];
 $isAdmin = USER_INFO['role']=='admin';
-$auth = $req['resident_id'] != $userId && $req['supplier_id'] != $userId;
+$auth = ($req['resident_id'] == $userId || $req['supplier_id'] == $userId);
 
 // making sure only authorised users can proceed
 if (!$auth && !$isAdmin) {

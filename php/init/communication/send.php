@@ -35,6 +35,7 @@ if ($type === 'image') {
     if (!in_array(strtolower($ext), $allowed)) die(Error(1, "Invalid image type"));
     $filename = uniqid("msg_") . ".$ext";
     $dest     = UPLOAD_DIR . "/messages/" . $filename;
+    if (!is_dir(UPLOAD_DIR . "/messages")) mkdir(UPLOAD_DIR . "/messages", 0755, true);
     if (!move_uploaded_file($_FILES['image']['tmp_name'], $dest)) die(Error(2, "Failed to save image"));
     $body = "messages/$filename";
 }
