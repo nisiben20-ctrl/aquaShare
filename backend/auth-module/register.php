@@ -1,6 +1,6 @@
 <?php
 
-include("../shared/database/db.php");
+include("db.php");
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
@@ -10,8 +10,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = trim($_POST['password']);
     $address = trim($_POST['address']);
 
-    // DEFAULT ROLE
-    $role = "resident";
+    // DYNAMIC ROLE (Resident or Supplier)
+    $role = isset($_POST['role']) ? trim($_POST['role']) : 'resident';
+    if ($role !== 'resident' && $role !== 'supplier') {
+        $role = 'resident';
+    }
 
     if (empty($full_name) || empty($phone) || empty($password)) {
         die("Required fields cannot be empty");

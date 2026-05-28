@@ -20,7 +20,7 @@ const KEYS = {
 
 async function request(url, options = {}) {
   const defaultHeaders = {};
-  
+
   // Don't set Content-Type for FormData (browser sets multipart boundary)
   if (!(options.body instanceof FormData)) {
     defaultHeaders['Content-Type'] = 'application/x-www-form-urlencoded';
@@ -51,6 +51,43 @@ async function request(url, options = {}) {
   }
 }
 
+/**
+ * Special handler for register.php which uses die() for errors (plain text)
+ * and header("Location: login.html") on success (causes a redirect).
+ * We treat a redirected or 200 OK response that is non-JSON as SUCCESS.
+ */
+async function registerRequest(url, options = {}) {
+  const defaultHeaders = { 'Content-Type': 'application/x-www-form-urlencoded' };
+  try {
+    const res = await fetch(`${API_BASE}${url}`, {
+      credentials: 'include',
+      redirect: 'manual', // Don't auto-follow redirects — detect success ourselves
+      ...options,
+      headers: { ...defaultHeaders, ...options.headers },
+    });
+
+    // A 3xx redirect from register.php means registration succeeded
+    // (it redirects to login.html on success)
+    if (res.type === 'opaqueredirect' || res.status === 302 || res.status === 301) {
+      return { data: { registered: true } };
+    }
+
+    const text = await res.text();
+
+    // If we get an OK but non-redirect response — check if it's an error message
+    if (text && text.trim().length > 0) {
+      // register.php outputs error strings directly via die() or echo
+      // These are plain text, never JSON
+      return { error: { code: res.status, message: text.trim() } };
+    }
+
+    // Empty 200 = success fallback
+    return { data: { registered: true } };
+  } catch (err) {
+    return { error: { code: -2, message: err.message || 'Connection refused' } };
+  }
+}
+
 /** Encode a plain object as application/x-www-form-urlencoded */
 function encode(data) {
   return new URLSearchParams(data).toString();
@@ -69,72 +106,26 @@ function getLoggedInUser() {
 // ── Auth Module ────────────────────────────────────────────
 export const auth = {
   async login(email, password) {
-    const res = await request('/auth-module/index.php', {
+    const res = await request('/auth-module/login.php', {
       method: 'POST',
-      body: encode({ email, password_hash: password }),
+      body: encode({ email, password })
     });
-
-    // Fallback if backend server is not running
-    if (res.error && res.error.code === -2) {
-      console.warn('Backend server not responding, falling back to local simulation.');
-      const usersList = JSON.parse(localStorage.getItem(KEYS.USERS) || '[]');
-      const foundUser = usersList.find(u => u.email === email && u.password === password);
-      
-      if (foundUser) {
-        const profilesList = JSON.parse(localStorage.getItem(KEYS.PROFILES) || '[]');
-        const profile = profilesList.find(p => p.user_id === foundUser.id) || null;
-        
-        return {
-          data: {
-            user: { id: foundUser.id, full_name: foundUser.full_name, phone: foundUser.phone, email: foundUser.email, role: foundUser.role },
-            profile: profile
-          },
-          message: "Authentication Successful (Local Mock)"
-        };
-      }
-      return { error: { code: 2, message: 'Invalid credentials (local simulation)' } };
-    }
 
     return res;
   },
 
-  async register({ name, phone, email, password, role }) {
-    const res = await request('/auth-module/registration.php', {
+  async register({ full_name, phone, email, password, address, role }) {
+    const res = await registerRequest('/auth-module/register.php', {
       method: 'POST',
       body: encode({
-        name,
+        full_name,
         phone,
         email,
-        password_hash: password,
+        address,
+        password: password,
         role: role || 'resident',
       }),
     });
-
-    // Fallback if backend server is not running
-    if (res.error && res.error.code === -2) {
-      console.warn('Backend server not responding, falling back to local simulation.');
-      const usersList = JSON.parse(localStorage.getItem(KEYS.USERS) || '[]');
-      
-      if (usersList.some(u => u.email === email)) {
-        return { error: { code: 2, message: 'Email already registered (local simulation)' } };
-      }
-      if (usersList.some(u => u.phone === phone)) {
-        return { error: { code: 2, message: 'Phone number already registered (local simulation)' } };
-      }
-
-      const newUser = {
-        id: Date.now(),
-        full_name: name,
-        phone,
-        email,
-        password, // stored plain for local testing
-        role: role || 'resident'
-      };
-
-      usersList.push(newUser);
-      localStorage.setItem(KEYS.USERS, JSON.stringify(usersList));
-      return { data: newUser.id, message: "Registration Successful (Local Mock)" };
-    }
 
     return res;
   },
@@ -147,38 +138,6 @@ export const user = {
       method: 'POST',
       body: encode({ address, landmark, ...extra }),
     });
-
-    // Fallback if backend server is not running
-    if (res.error && res.error.code === -2) {
-      console.warn('Backend server not responding, falling back to local simulation.');
-      const activeUser = getLoggedInUser();
-      if (!activeUser) return { error: { message: 'Not authenticated' } };
-
-      const profilesList = JSON.parse(localStorage.getItem(KEYS.PROFILES) || '[]');
-      const index = profilesList.findIndex(p => p.user_id === activeUser.id);
-      
-      const newProfile = {
-        id: Date.now(),
-        user_id: activeUser.id,
-        address,
-        landmark,
-        ...extra
-      };
-
-      if (index >= 0) {
-        profilesList[index] = { ...profilesList[index], ...newProfile };
-      } else {
-        profilesList.push(newProfile);
-      }
-      localStorage.setItem(KEYS.PROFILES, JSON.stringify(profilesList));
-      
-      // Upsert into active supplier search list
-      if (activeUser.role === 'supplier') {
-        syncActiveSupplierToMockList(activeUser, newProfile);
-      }
-
-      return { data: newProfile, message: "Profile Created (Local Mock)" };
-    }
 
     return res;
   },
@@ -204,7 +163,7 @@ export function syncActiveSupplierToMockList(activeUser, profile) {
   initSuppliers();
   const list = JSON.parse(localStorage.getItem(KEYS.SUPPLIERS) || '[]');
   const index = list.findIndex(s => s.id === activeUser.id);
-  
+
   const supplierData = {
     id: activeUser.id,
     full_name: activeUser.full_name,
@@ -231,7 +190,7 @@ export const suppliers = {
   list(searchTerm = '') {
     initSuppliers();
     let list = JSON.parse(localStorage.getItem(KEYS.SUPPLIERS) || '[]');
-    
+
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       list = list.filter(s =>
@@ -242,11 +201,11 @@ export const suppliers = {
     }
     return Promise.resolve({ data: list });
   },
-  
+
   updateAvailability(isAvailable) {
     const activeUser = getLoggedInUser();
     if (!activeUser) return Promise.resolve({ error: { message: 'Not authenticated' } });
-    
+
     initSuppliers();
     const list = JSON.parse(localStorage.getItem(KEYS.SUPPLIERS) || '[]');
     const index = list.findIndex(s => s.id === activeUser.id);
@@ -309,9 +268,9 @@ export const requests = {
     if (!activeUser) return Promise.resolve({ data: [] });
 
     const reqList = JSON.parse(localStorage.getItem(KEYS.REQUESTS) || '[]');
-    const filtered = reqList.filter(r => 
-      activeUser.role === 'supplier' 
-        ? r.supplier_id === activeUser.id 
+    const filtered = reqList.filter(r =>
+      activeUser.role === 'supplier'
+        ? r.supplier_id === activeUser.id
         : r.resident_id === activeUser.id
     );
     return Promise.resolve({ data: filtered });
@@ -328,72 +287,44 @@ export const requests = {
   }
 };
 
-// ── Communication Module (Mocked via LocalStorage) ──────────
+// ── Communication Module (Real Backend) ─────────────────────
 export const messages = {
-  get(requestId) {
-    const msgs = JSON.parse(localStorage.getItem(KEYS.MESSAGES) || '[]');
-    const filtered = msgs.filter(m => m.request_id === Number(requestId));
-
-    // Mark messages from counterparty as read
-    const activeUser = getLoggedInUser();
-    if (activeUser) {
-      const updated = msgs.map(m => {
-        if (m.request_id === Number(requestId) && m.sender_id !== activeUser.id) {
-          return { ...m, is_read: 1 };
-        }
-        return m;
-      });
-      localStorage.setItem(KEYS.MESSAGES, JSON.stringify(updated));
-    }
-
-    return Promise.resolve({ data: filtered });
+  async get(requestId) {
+    return request(`/communication-module/get.php?request_id=${requestId}`);
   },
 
-  send({ requestId, type = 'text', body }) {
-    const activeUser = getLoggedInUser();
-    if (!activeUser) return Promise.resolve({ error: { message: 'Not authenticated' } });
+  async send({ requestId, type = 'text', body }) {
+    const formData = new FormData();
+    formData.append('request_id', requestId);
+    formData.append('type', type);
+    formData.append('body', body);
 
-    const msgs = JSON.parse(localStorage.getItem(KEYS.MESSAGES) || '[]');
-    const newMsg = {
-      id: Date.now(),
-      request_id: Number(requestId),
-      sender_id: activeUser.id,
-      sender_name: activeUser.full_name,
-      type,
-      body,
-      is_read: 0,
-      created_at: new Date().toISOString().replace('T', ' ').substring(0, 19),
-    };
-    
-    msgs.push(newMsg);
-    localStorage.setItem(KEYS.MESSAGES, JSON.stringify(msgs));
-    return Promise.resolve({ data: newMsg });
-  },
-
-  sendImage({ requestId, file }) {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64data = reader.result;
-        resolve(messages.send({ requestId, type: 'image', body: base64data }));
-      };
-      reader.readAsDataURL(file);
+    return request('/communication-module/send.php', {
+      method: 'POST',
+      body: formData,
     });
   },
 
-  markRead(requestId) {
-    const activeUser = getLoggedInUser();
-    if (!activeUser) return Promise.resolve({ error: { message: 'Not authenticated' } });
+  async sendImage({ requestId, file }) {
+    const formData = new FormData();
+    formData.append('request_id', requestId);
+    formData.append('type', 'image');
+    formData.append('image', file);
 
-    const msgs = JSON.parse(localStorage.getItem(KEYS.MESSAGES) || '[]');
-    const updated = msgs.map(m => {
-      if (m.request_id === Number(requestId) && m.sender_id !== activeUser.id) {
-        return { ...m, is_read: 1 };
-      }
-      return m;
+    return request('/communication-module/send.php', {
+      method: 'POST',
+      body: formData,
     });
-    localStorage.setItem(KEYS.MESSAGES, JSON.stringify(updated));
-    return Promise.resolve({ data: { updated: true } });
+  },
+
+  async markRead(requestId) {
+    const formData = new FormData();
+    formData.append('request_id', requestId);
+
+    return request('/communication-module/markread.php', {
+      method: 'POST',
+      body: formData,
+    });
   },
 };
 

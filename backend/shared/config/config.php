@@ -6,7 +6,7 @@ header('Access-Control-Allow-Origin: *');
 
 const DB_HOST = '127.0.0.1',
 DB_USER = 'root',
-DB_PASS = '',
+DB_PASS = 'root',
 DB_NAME = 'aquashare',
 
 UPLOAD_DIR =  __DIR__ . DIRECTORY_SEPARATOR . 'uploads',

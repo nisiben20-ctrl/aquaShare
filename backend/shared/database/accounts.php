@@ -24,10 +24,10 @@ function Users(array $param = [], array $filters = []){
     $order = [$filters['orderby']??null, $filters['asc']??true];
 
     if($id) {
-        [$err, $users] = advanceSelect('user', '*', ["id"=>$id]);
+        [$err, $users] = advanceSelect('users', '*', ["id"=>$id]);
         $count = count($users);
     }else{
-        [$err, $users] = advanceSelect('user', "id, role, name, email, created_at, updated_at", [
+        [$err, $users] = advanceSelect('users', "id, role, name, email, created_at, updated_at", [
             "__SEARCH"=> ["name"=>$search, "email"=>$search],
             "__LESSER"=>["DateCreated"=>$to],
             "__GREATER"=>["DateCreated"=>$from],
@@ -38,7 +38,7 @@ function Users(array $param = [], array $filters = []){
             ...$param
         ]);
 
-        [$err, $result] = advanceSelect('user', "COUNT(*) as count", [
+        [$err, $result] = advanceSelect('users', "COUNT(*) as count", [
             "__SEARCH"=> ["name"=>$search, "email"=>$search],
             "__LESSER"=>["DateCreated"=>$to],
             "__GREATER"=>["DateCreated"=>$from],

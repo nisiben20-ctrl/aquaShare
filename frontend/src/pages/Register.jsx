@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { auth } from '../services/api';
-import { Droplets, User, Phone, Mail, Lock, Eye, EyeOff, MapPin, ChevronRight, Check } from 'lucide-react';
+import { FaTint, FaUser, FaPhone, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaChevronRight, FaCheck, FaArrowRight, FaMapMarkerAlt } from 'react-icons/fa';
 
 const STEPS = ['Account Type', 'Personal Info', 'Security'];
 
@@ -13,6 +13,7 @@ export default function Register() {
     name: '',
     phone: '',
     email: '',
+    address: '',
     password: '',
     confirmPassword: '',
   });
@@ -29,6 +30,7 @@ export default function Register() {
     if (step === 1) {
       if (!form.name.trim()) return setError('Full name is required');
       if (!form.phone.trim()) return setError('Phone number is required');
+      if (!form.address.trim()) return setError('Physical address is required');
       if (form.email && !/\S+@\S+\.\S+/.test(form.email)) return setError('Invalid email address');
     }
     setError('');
@@ -54,19 +56,19 @@ export default function Register() {
     setLoading(true);
     try {
       const res = await auth.register({
-        name: form.name,
+        full_name: form.name,
         phone: form.phone,
         email: form.email,
+        address: form.address,
         password: form.password,
         role: form.role,
       });
 
       if (res.error) {
         setError(res.error.message || 'Registration failed');
-      } else if (res.data !== undefined) {
-        navigate('/login', { state: { registered: true } });
       } else {
-        setError('Unexpected response from server');
+        // Success — register.php redirects to login.html, we navigate in React instead
+        navigate('/login', { state: { registered: true } });
       }
     } catch {
       setError('Network error — please try again');
@@ -81,7 +83,7 @@ export default function Register() {
       <div className="auth-sidebar">
         <div className="auth-sidebar-content">
           <div className="auth-logo">
-            <Droplets size={56} strokeWidth={1.5} />
+            <FaTint size={60} color="rgba(186,230,253,0.9)" />
           </div>
           <h1>Join AquaShare</h1>
           <p>
@@ -90,28 +92,58 @@ export default function Register() {
           </p>
 
           {/* Stepper */}
-          <div style={{ marginTop: '48px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ marginTop: '48px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {STEPS.map((label, i) => (
               <div key={label} style={{
-                display: 'flex', alignItems: 'center', gap: '12px',
-                opacity: i <= step ? 1 : 0.4,
+                display: 'flex', alignItems: 'center', gap: '14px',
+                opacity: i <= step ? 1 : 0.35,
+                transition: 'opacity 0.3s ease',
               }}>
                 <div style={{
-                  width: 32, height: 32, borderRadius: '50%',
-                  background: i < step ? 'rgba(255,255,255,.3)' : i === step ? 'var(--white)' : 'rgba(255,255,255,.1)',
+                  width: 34, height: 34, borderRadius: '50%',
+                  background: i < step
+                    ? 'rgba(34,211,238,0.3)'
+                    : i === step
+                      ? 'rgba(255,255,255,0.95)'
+                      : 'rgba(255,255,255,0.08)',
                   color: i === step ? 'var(--primary-700)' : 'var(--white)',
+                  border: i < step
+                    ? '2px solid rgba(34,211,238,0.5)'
+                    : i === step
+                      ? '2px solid rgba(255,255,255,0.9)'
+                      : '2px solid rgba(255,255,255,0.15)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: '.8125rem', fontWeight: 700,
                   transition: 'all .3s ease',
+                  flexShrink: 0,
+                  boxShadow: i === step ? '0 0 0 4px rgba(255,255,255,0.1)' : 'none',
                 }}>
-                  {i < step ? <Check size={16} /> : i + 1}
+                  {i < step ? <FaCheck size={15} /> : i + 1}
                 </div>
-                <span style={{ fontSize: '.9375rem', fontWeight: i === step ? 600 : 400 }}>
-                  {label}
-                </span>
+                <div>
+                  <div style={{
+                    fontSize: '.9375rem',
+                    fontWeight: i === step ? 700 : 500,
+                    color: i === step ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.7)',
+                  }}>
+                    {label}
+                  </div>
+                  {i < step && (
+                    <div style={{ fontSize: '.72rem', color: 'rgba(34,211,238,0.8)', marginTop: '1px' }}>
+                      ✓ Completed
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Wave */}
+        <div className="auth-sidebar-wave">
+          <svg viewBox="0 0 1200 120" preserveAspectRatio="none" style={{ height: '60px' }}>
+            <path d="M0,60 C200,100 400,20 600,60 C800,100 1000,20 1200,60 L1200,120 L0,120 Z" fill="rgba(255,255,255,0.06)" />
+          </svg>
         </div>
       </div>
 
@@ -120,45 +152,70 @@ export default function Register() {
         <div className="auth-form-wrapper animate-in">
           <div className="auth-form-header">
             <h2>Create your account</h2>
-            <p>Step {step + 1} of {STEPS.length} — {STEPS[step]}</p>
+            <p>
+              Step <strong>{step + 1}</strong> of {STEPS.length}
+              <span style={{
+                marginLeft: '10px', padding: '2px 10px',
+                background: 'var(--primary-50)', color: 'var(--primary-600)',
+                borderRadius: 'var(--radius-full)', fontSize: '.78rem', fontWeight: 600,
+              }}>
+                {STEPS[step]}
+              </span>
+            </p>
+          </div>
+
+          {/* Progress bar */}
+          <div style={{
+            height: '4px', background: 'var(--gray-100)', borderRadius: 'var(--radius-full)',
+            marginBottom: '28px', overflow: 'hidden',
+          }}>
+            <div style={{
+              height: '100%',
+              width: `${((step + 1) / STEPS.length) * 100}%`,
+              background: 'linear-gradient(90deg, var(--primary-400), var(--accent-500))',
+              borderRadius: 'var(--radius-full)',
+              transition: 'width 0.4s cubic-bezier(.34,1.56,.64,1)',
+            }} />
           </div>
 
           {error && (
-            <div style={{
-              background: '#ffebee', color: '#c62828',
-              padding: '12px 16px', borderRadius: 'var(--radius-md)',
-              fontSize: '.875rem', marginBottom: '20px',
-            }}>
-              ⚠ {error}
+            <div className="alert alert-error">
+              <span>⚠</span>
+              <span>{error}</span>
             </div>
           )}
 
           <form onSubmit={handleSubmit}>
             {/* STEP 0 — Role Selection */}
             {step === 0 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 {[
                   {
                     value: 'resident',
                     title: 'I need water',
-                    desc: 'Sign up as a resident to find and request water from local suppliers.',
-                    icon: '🏠',
+                    desc: 'Find and request water from local suppliers.',
+                    icon: '',
+                    color: 'var(--primary-500)',
                   },
                   {
                     value: 'supplier',
                     title: 'I supply water',
-                    desc: 'Sign up as a supplier to reach residents in your area.',
-                    icon: '🚰',
+                    desc: 'Reach residents in your area and grow your business.',
+                    icon: '',
+                    color: 'var(--accent-500)',
                   },
                 ].map((opt) => (
                   <label
                     key={opt.value}
+                    id={`role-${opt.value}`}
                     style={{
                       display: 'flex', alignItems: 'center', gap: '16px',
-                      padding: '20px', borderRadius: 'var(--radius-lg)',
-                      border: `2px solid ${form.role === opt.value ? 'var(--primary-500)' : 'var(--gray-200)'}`,
+                      padding: '18px 20px', borderRadius: 'var(--radius-lg)',
+                      border: `2px solid ${form.role === opt.value ? 'var(--primary-400)' : 'var(--gray-200)'}`,
                       background: form.role === opt.value ? 'var(--primary-50)' : 'var(--white)',
-                      cursor: 'pointer', transition: 'all .2s ease',
+                      cursor: 'pointer',
+                      transition: 'all .2s ease',
+                      boxShadow: form.role === opt.value ? '0 0 0 3px rgba(14,165,233,0.1)' : 'none',
                     }}
                   >
                     <input
@@ -169,23 +226,30 @@ export default function Register() {
                       onChange={handleChange}
                       style={{ display: 'none' }}
                     />
-                    <span style={{ fontSize: '2rem' }}>{opt.icon}</span>
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: '1rem', marginBottom: '4px' }}>
+                    <span style={{
+                      fontSize: '2rem', lineHeight: 1,
+                      background: form.role === opt.value ? 'var(--primary-100)' : 'var(--gray-100)',
+                      borderRadius: 'var(--radius-md)', padding: '10px',
+                      transition: 'background .2s',
+                    }}>
+                      {opt.icon}
+                    </span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '3px', color: 'var(--gray-900)' }}>
                         {opt.title}
                       </div>
-                      <div style={{ fontSize: '.8125rem', color: 'var(--text-secondary)' }}>
+                      <div style={{ fontSize: '.8125rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
                         {opt.desc}
                       </div>
                     </div>
                     <div style={{
-                      marginLeft: 'auto',
-                      width: 22, height: 22, borderRadius: '50%',
-                      border: `2px solid ${form.role === opt.value ? 'var(--primary-500)' : 'var(--gray-400)'}`,
+                      width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
+                      border: `2.5px solid ${form.role === opt.value ? 'var(--primary-500)' : 'var(--gray-300)'}`,
                       background: form.role === opt.value ? 'var(--primary-500)' : 'transparent',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      transition: 'all .2s',
                     }}>
-                      {form.role === opt.value && <Check size={14} color="white" />}
+                      {form.role === opt.value && <Check size={13} color="white" strokeWidth={3} />}
                     </div>
                   </label>
                 ))}
@@ -195,8 +259,9 @@ export default function Register() {
                   className="btn btn-primary btn-lg btn-block"
                   onClick={nextStep}
                   style={{ marginTop: '8px' }}
+                  id="register-next-step-0"
                 >
-                  Continue <ChevronRight size={18} />
+                  Continue <FaChevronRight size={18} />
                 </button>
               </div>
             )}
@@ -207,9 +272,9 @@ export default function Register() {
                 <div className="form-group">
                   <label className="form-label" htmlFor="reg-name">Full Name *</label>
                   <div style={{ position: 'relative' }}>
-                    <User size={18} style={{
+                    <FaUser size={17} style={{
                       position: 'absolute', left: '14px', top: '50%',
-                      transform: 'translateY(-50%)', color: 'var(--gray-500)',
+                      transform: 'translateY(-50%)', color: 'var(--gray-400)', pointerEvents: 'none',
                     }} />
                     <input
                       id="reg-name"
@@ -220,6 +285,7 @@ export default function Register() {
                       value={form.name}
                       onChange={handleChange}
                       style={{ paddingLeft: '42px' }}
+                      autoFocus
                     />
                   </div>
                 </div>
@@ -227,16 +293,16 @@ export default function Register() {
                 <div className="form-group">
                   <label className="form-label" htmlFor="reg-phone">Phone Number *</label>
                   <div style={{ position: 'relative' }}>
-                    <Phone size={18} style={{
+                    <FaPhone size={17} style={{
                       position: 'absolute', left: '14px', top: '50%',
-                      transform: 'translateY(-50%)', color: 'var(--gray-500)',
+                      transform: 'translateY(-50%)', color: 'var(--gray-400)', pointerEvents: 'none',
                     }} />
                     <input
                       id="reg-phone"
                       className="form-input"
                       type="tel"
                       name="phone"
-                      placeholder="675204747"
+                      placeholder="675 204 747"
                       value={form.phone}
                       onChange={handleChange}
                       style={{ paddingLeft: '42px' }}
@@ -245,11 +311,14 @@ export default function Register() {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label" htmlFor="reg-email">Email Address</label>
+                  <label className="form-label" htmlFor="reg-email">
+                    Email Address
+                    <span style={{ fontWeight: 400, color: 'var(--gray-400)', marginLeft: '6px' }}>(Optional)</span>
+                  </label>
                   <div style={{ position: 'relative' }}>
-                    <Mail size={18} style={{
+                    <FaEnvelope size={17} style={{
                       position: 'absolute', left: '14px', top: '50%',
-                      transform: 'translateY(-50%)', color: 'var(--gray-500)',
+                      transform: 'translateY(-50%)', color: 'var(--gray-400)', pointerEvents: 'none',
                     }} />
                     <input
                       id="reg-email"
@@ -262,15 +331,35 @@ export default function Register() {
                       style={{ paddingLeft: '42px' }}
                     />
                   </div>
-                  <span className="form-hint">Optional, but recommended for account recovery</span>
+                  <span className="form-hint">Recommended for account recovery</span>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="reg-address">Physical Address *</label>
+                  <div style={{ position: 'relative' }}>
+                    <FaMapMarkerAlt size={17} style={{
+                      position: 'absolute', left: '14px', top: '50%',
+                      transform: 'translateY(-50%)', color: 'var(--gray-400)', pointerEvents: 'none',
+                    }} />
+                    <input
+                      id="reg-address"
+                      className="form-input"
+                      type="text"
+                      name="address"
+                      placeholder="e.g. Molyko, Buea"
+                      value={form.address}
+                      onChange={handleChange}
+                      style={{ paddingLeft: '42px' }}
+                    />
+                  </div>
                 </div>
 
                 <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-                  <button type="button" className="btn btn-secondary" onClick={prevStep}>
+                  <button type="button" className="btn btn-secondary" onClick={prevStep} id="register-back-1">
                     Back
                   </button>
-                  <button type="button" className="btn btn-primary btn-block" onClick={nextStep}>
-                    Continue <ChevronRight size={18} />
+                  <button type="button" className="btn btn-primary btn-block" onClick={nextStep} id="register-next-step-1">
+                    Continue <FaChevronRight size={18} />
                   </button>
                 </div>
               </div>
@@ -280,11 +369,11 @@ export default function Register() {
             {step === 2 && (
               <div>
                 <div className="form-group">
-                  <label className="form-label" htmlFor="reg-password">Password *</label>
+                  <label className="form-label" htmlFor="reg-password">Create Password *</label>
                   <div style={{ position: 'relative' }}>
-                    <Lock size={18} style={{
+                    <FaLock size={17} style={{
                       position: 'absolute', left: '14px', top: '50%',
-                      transform: 'translateY(-50%)', color: 'var(--gray-500)',
+                      transform: 'translateY(-50%)', color: 'var(--gray-400)', pointerEvents: 'none',
                     }} />
                     <input
                       id="reg-password"
@@ -294,7 +383,8 @@ export default function Register() {
                       placeholder="At least 6 characters"
                       value={form.password}
                       onChange={handleChange}
-                      style={{ paddingLeft: '42px', paddingRight: '42px' }}
+                      style={{ paddingLeft: '42px', paddingRight: '44px' }}
+                      autoFocus
                     />
                     <button
                       type="button"
@@ -302,20 +392,41 @@ export default function Register() {
                       style={{
                         position: 'absolute', right: '12px', top: '50%',
                         transform: 'translateY(-50%)', background: 'none',
-                        border: 'none', cursor: 'pointer', color: 'var(--gray-500)', padding: '4px',
+                        border: 'none', cursor: 'pointer', color: 'var(--gray-400)',
+                        padding: '4px', display: 'flex',
                       }}
                     >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      {showPassword ? <FaEyeSlash size={17} /> : <FaEye size={17} />}
                     </button>
                   </div>
+
+                  {/* Password strength indicator */}
+                  {form.password && (
+                    <div style={{ marginTop: '8px' }}>
+                      <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
+                        {[1, 2, 3].map((n) => (
+                          <div key={n} style={{
+                            height: '3px', flex: 1, borderRadius: '99px',
+                            background: form.password.length >= n * 3
+                              ? (n === 1 ? '#f59e0b' : n === 2 ? '#3b82f6' : '#16a34a')
+                              : 'var(--gray-200)',
+                            transition: 'background 0.3s',
+                          }} />
+                        ))}
+                      </div>
+                      <span style={{ fontSize: '.72rem', color: 'var(--gray-400)' }}>
+                        {form.password.length < 3 ? 'Weak' : form.password.length < 6 ? 'Fair' : 'Strong'} password
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="form-group">
                   <label className="form-label" htmlFor="reg-confirm-password">Confirm Password *</label>
                   <div style={{ position: 'relative' }}>
-                    <Lock size={18} style={{
+                    <FaLock size={17} style={{
                       position: 'absolute', left: '14px', top: '50%',
-                      transform: 'translateY(-50%)', color: 'var(--gray-500)',
+                      transform: 'translateY(-50%)', color: 'var(--gray-400)', pointerEvents: 'none',
                     }} />
                     <input
                       id="reg-confirm-password"
@@ -325,26 +436,39 @@ export default function Register() {
                       placeholder="Re-enter your password"
                       value={form.confirmPassword}
                       onChange={handleChange}
-                      style={{ paddingLeft: '42px' }}
+                      style={{
+                        paddingLeft: '42px',
+                        borderColor: form.confirmPassword && form.password !== form.confirmPassword
+                          ? 'var(--error)' : undefined,
+                      }}
                     />
+                    {form.confirmPassword && form.password === form.confirmPassword && (
+                      <FaCheck size={16} style={{
+                        position: 'absolute', right: '14px', top: '50%',
+                        transform: 'translateY(-50%)', color: 'var(--success)',
+                      }} />
+                    )}
                   </div>
                 </div>
 
                 <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-                  <button type="button" className="btn btn-secondary" onClick={prevStep}>
+                  <button type="button" className="btn btn-secondary" onClick={prevStep} id="register-back-2">
                     Back
                   </button>
                   <button
                     type="submit"
                     className="btn btn-primary btn-block"
                     disabled={loading}
+                    id="register-submit-btn"
                   >
                     {loading ? (
                       <>
-                        <span className="spinner" style={{ width: 20, height: 20, borderWidth: 2 }} />
+                        <span className="spinner" style={{ width: 18, height: 18, borderWidth: 2, borderColor: 'rgba(255,255,255,.3)', borderTopColor: '#fff' }} />
                         Creating…
                       </>
-                    ) : 'Create Account'}
+                    ) : (
+                      <>Create Account <FaArrowRight size={17} /></>
+                    )}
                   </button>
                 </div>
               </div>

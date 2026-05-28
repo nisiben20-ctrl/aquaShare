@@ -1,8 +1,9 @@
 <?php
 
 session_start();
+include("db.php");
 
-include("../shared/database/db.php");
+header("Content-Type: application/json");
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
@@ -10,10 +11,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = trim($_POST['password']);
 
     if (empty($email) || empty($password)) {
-        die("Email and password are required");
+        echo json_encode([
+            "success" => false,
+            "message" => "Email and password are required"
+        ]);
+        exit();
     }
 
-    // SECURE QUERY
     $stmt = mysqli_prepare(
         $conn,
         "SELECT id, full_name, password_hash, role FROM users WHERE email = ?"
@@ -27,36 +31,37 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $user = mysqli_fetch_assoc($result);
 
-        // VERIFY PASSWORD
         if (password_verify($password, $user['password_hash'])) {
 
-            // CREATE SESSION
             session_regenerate_id(true);
+
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['full_name'] = $user['full_name'];
             $_SESSION['role'] = $user['role'];
 
-            mysqli_stmt_close($stmt);
-
-            // CHECK ROLE
-            if ($user['role'] == "resident") {
-                header("Location: resident_dashboard.php");
-            } else {
-                header("Location: dashboard.php");
-            }
+            echo json_encode([
+                "success" => true,
+                "user" => [
+                    "id" => $user['id'],
+                    "full_name" => $user['full_name'],
+                    "role" => $user['role']
+                ]
+            ]);
             exit();
 
         } else {
-
-            mysqli_stmt_close($stmt);
-            echo "Invalid password";
+            echo json_encode([
+                "success" => false,
+                "message" => "Invalid password"
+            ]);
+            exit();
         }
 
     } else {
-
-        mysqli_stmt_close($stmt);
-        echo "User not found";
+        echo json_encode([
+            "success" => false,
+            "message" => "User not found"
+        ]);
+        exit();
     }
 }
-
-?>

@@ -11,7 +11,7 @@ function signIn($param){
     $username = $param['email'];
     $pass = $param['password_hash'];
 
-    [$err, $result] = advanceSelect('user', "*", ['email'=>$username]);
+    [$err, $result] = advanceSelect('users', "*", ['email'=>$username]);
     
     if( $err ){
         die(Error(2, 'unable to perform authentication ' . $err));
