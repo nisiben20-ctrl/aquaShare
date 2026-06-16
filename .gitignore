@@ -50,6 +50,7 @@ web_modules/
 # Optional npm cache directory
 .npm
 .kiro
+**/__test__/**
 
 # Optional eslint cache
 .eslintcache
