@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { auth } from '../services/api';
-import { FaTint, FaEye, FaEyeSlash, FaEnvelope, FaLock, FaArrowRight } from 'react-icons/fa';
+import { FaHandHoldingWater, FaEye, FaEyeSlash, FaEnvelope, FaLock, FaArrowRight } from 'react-icons/fa';
+import PublicNavbar from '../components/PublicNavbar';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -31,8 +32,8 @@ export default function Login() {
       const res = await auth.login(form.email, form.password);
       if (res.error) {
         setError(res.error.message || 'Login failed');
-      } else if (res.success) {
-        login(res.user, null);
+      } else if (res.data) {
+        login(res.data.user, res.data.profile);
         navigate('/dashboard');
       } else {
         setError('Unexpected response from server');
@@ -45,12 +46,13 @@ export default function Login() {
   };
 
   return (
-    <div className="auth-layout">
+    <div className="auth-layout" style={{ paddingTop: '72px' }}>
+      <PublicNavbar />
       {/* Sidebar */}
       <div className="auth-sidebar">
         <div className="auth-sidebar-content">
           <div className="auth-logo">
-            <FaTint size={60} color="rgba(186,230,253,0.9)" />
+            <FaHandHoldingWater size={60} color="rgba(186,230,253,0.9)" />
           </div>
           <h1>AquaShare</h1>
           <p>
@@ -61,9 +63,9 @@ export default function Login() {
           {/* Feature bullets */}
           <div style={{ marginTop: '40px', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '14px' }}>
             {[
-              { emoji: '', text: 'Find verified water suppliers near you' },
-              { emoji: '', text: 'Place and track requests in real time' },
-              { emoji: '', text: 'Chat directly with your supplier' },
+              { text: 'Find verified water suppliers near you' },
+              { text: 'Place and track requests in real time' },
+              { text: 'Chat directly with your supplier' },
             ].map((item) => (
               <div key={item.text} style={{
                 display: 'flex', alignItems: 'center', gap: '12px',
@@ -172,10 +174,10 @@ export default function Login() {
 
             <button
               type="submit"
-              className="btn btn-primary btn-lg btn-block"
+              className="btn btn-primary rounded-pill w-100 py-3"
               disabled={loading}
               id="login-submit-btn"
-              style={{ marginTop: '8px', gap: '10px' }}
+              style={{ marginTop: '8px', gap: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
             >
               {loading ? (
                 <>

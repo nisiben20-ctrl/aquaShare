@@ -1,0 +1,1 @@
+INSERT INTO users (full_name, phone, email, password_hash, address, is_active, role) VALUES ('Admin', '000000000', 'admin@gmail.com', '$2y$12$CgzrOABKTJBvjxGUuFaO4.vNi4fsMMwp6jv.4/wmtOQmvNEYGjUmy', 'Admin HQ', 1, 'admin');

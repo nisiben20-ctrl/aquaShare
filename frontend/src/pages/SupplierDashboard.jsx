@@ -5,8 +5,9 @@ import { requests as requestsApi, suppliers as suppliersApi, syncActiveSupplierT
 import {
   FaTint, FaShoppingCart, FaClock, FaCheckCircle, FaSave,
   FaTimes, FaCheck, FaTimesCircle, FaMapMarkerAlt, FaCommentAlt,
-  FaBriefcase, FaDollarSign, FaPhone
+  FaBriefcase, FaDollarSign, FaPhone, FaChevronDown
 } from 'react-icons/fa';
+import heroBg from '../assets/hero.jpg';
 
 const STATUS_CHIP = {
   pending: 'chip-warning',
@@ -109,13 +110,64 @@ export default function SupplierDashboard() {
   ];
 
   return (
-    <div className="animate-in">
-      {/* Welcome */}
-      <div className="page-welcome">
-        <h2>Welcome, {user?.full_name?.split(' ')[0] || 'Supplier'} </h2>
-        <p>Manage your water supply operations and respond to requests.</p>
+    <div>
+      {/* ══ DASHBOARD WELCOME BANNER ═══════════════════════════ */}
+      <div style={{
+        background: 'linear-gradient(135deg, #001f3f 0%, #003366 60%, #004a8f 100%)',
+        borderRadius: '18px',
+        padding: '28px 32px',
+        marginBottom: '24px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '16px',
+        boxShadow: '0 8px 32px rgba(0, 31, 63, 0.25)',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+        <div style={{
+          position: 'absolute', top: '-30px', right: '-30px',
+          width: '160px', height: '160px', borderRadius: '50%',
+          background: 'rgba(255,255,255,0.04)', pointerEvents: 'none',
+        }} />
+        <div style={{
+          position: 'absolute', bottom: '-50px', right: '120px',
+          width: '200px', height: '200px', borderRadius: '50%',
+          background: 'rgba(255,122,0,0.07)', pointerEvents: 'none',
+        }} />
+        <div>
+          <h1 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#fff', marginBottom: '6px', letterSpacing: '-0.02em' }}>
+            👋 Welcome back, {user?.full_name?.split(' ')[0] || 'Supplier'}!
+          </h1>
+          <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '0.95rem', margin: 0 }}>
+            Manage your pricing, availability, and respond to water requests.
+          </p>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{
+            background: isAvailable ? 'rgba(22,163,74,0.2)' : 'rgba(255,255,255,0.08)',
+            borderRadius: '12px',
+            padding: '10px 18px',
+            border: isAvailable ? '1px solid rgba(22,163,74,0.4)' : '1px solid rgba(255,255,255,0.15)',
+            display: 'flex', alignItems: 'center', gap: '8px',
+            cursor: 'pointer',
+            transition: 'all 0.3s',
+          }} onClick={handleToggleAvailability}>
+            <span style={{
+              width: 8, height: 8, borderRadius: '50%',
+              background: isAvailable ? '#4ade80' : 'rgba(255,255,255,0.4)',
+              display: 'inline-block', boxShadow: isAvailable ? '0 0 6px #4ade80' : 'none',
+            }} />
+            <span style={{ color: isAvailable ? '#4ade80' : 'rgba(255,255,255,0.6)', fontSize: '0.875rem', fontWeight: 600 }}>
+              {isAvailable ? 'Online · Accepting' : 'Offline'}
+            </span>
+          </div>
+        </div>
       </div>
 
+      {/* ══ Below hero ══════════════════════════════════════════ */}
+      <div className="below-hero-content" id="supplier-stats">
       {/* Stats */}
       <div className="stat-grid">
         {stats.map((s) => (
@@ -132,7 +184,7 @@ export default function SupplierDashboard() {
       </div>
 
       {/* Controls */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginBottom: '32px' }}>
+      <div id="supplier-controls-container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginBottom: '32px' }}>
         {/* Availability Toggle */}
         <div className="card">
           <div className="card-header" style={{ marginBottom: '12px' }}>
@@ -348,6 +400,7 @@ export default function SupplierDashboard() {
           </div>
         )}
       </div>
+      </div>{/* end below-hero-content */}
     </div>
   );
 }

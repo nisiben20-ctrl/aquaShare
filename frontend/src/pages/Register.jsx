@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { auth } from '../services/api';
-import { FaTint, FaUser, FaPhone, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaChevronRight, FaCheck, FaArrowRight, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaHandHoldingWater, FaUser, FaPhone, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaChevronRight, FaCheck, FaArrowRight, FaMapMarkerAlt } from 'react-icons/fa';
+import PublicNavbar from '../components/PublicNavbar';
 
 const STEPS = ['Account Type', 'Personal Info', 'Security'];
 
@@ -13,7 +14,7 @@ export default function Register() {
     name: '',
     phone: '',
     email: '',
-    address: '',
+    address: 'Dirty south',
     password: '',
     confirmPassword: '',
   });
@@ -30,7 +31,7 @@ export default function Register() {
     if (step === 1) {
       if (!form.name.trim()) return setError('Full name is required');
       if (!form.phone.trim()) return setError('Phone number is required');
-      if (!form.address.trim()) return setError('Physical address is required');
+      if (form.role !== 'resident' && !form.address.trim()) return setError('Physical address is required');
       if (form.email && !/\S+@\S+\.\S+/.test(form.email)) return setError('Invalid email address');
     }
     setError('');
@@ -59,7 +60,7 @@ export default function Register() {
         full_name: form.name,
         phone: form.phone,
         email: form.email,
-        address: form.address,
+        address: form.role === 'resident' ? 'Dirty south' : form.address,
         password: form.password,
         role: form.role,
       });
@@ -78,12 +79,13 @@ export default function Register() {
   };
 
   return (
-    <div className="auth-layout">
+    <div className="auth-layout" style={{ paddingTop: '72px' }}>
+      <PublicNavbar />
       {/* Sidebar */}
       <div className="auth-sidebar">
         <div className="auth-sidebar-content">
           <div className="auth-logo">
-            <FaTint size={60} color="rgba(186,230,253,0.9)" />
+            <FaHandHoldingWater size={60} color="rgba(186,230,253,0.9)" />
           </div>
           <h1>Join AquaShare</h1>
           <p>
@@ -194,14 +196,12 @@ export default function Register() {
                     value: 'resident',
                     title: 'I need water',
                     desc: 'Find and request water from local suppliers.',
-                    icon: '',
                     color: 'var(--primary-500)',
                   },
                   {
                     value: 'supplier',
                     title: 'I supply water',
                     desc: 'Reach residents in your area and grow your business.',
-                    icon: '',
                     color: 'var(--accent-500)',
                   },
                 ].map((opt) => (
@@ -249,16 +249,16 @@ export default function Register() {
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       transition: 'all .2s',
                     }}>
-                      {form.role === opt.value && <Check size={13} color="white" strokeWidth={3} />}
+                      {form.role === opt.value && <FaCheck size={13} color="white" strokeWidth={3} />}
                     </div>
                   </label>
                 ))}
 
                 <button
                   type="button"
-                  className="btn btn-primary btn-lg btn-block"
+                  className="btn btn-primary rounded-pill w-100 py-3"
                   onClick={nextStep}
-                  style={{ marginTop: '8px' }}
+                  style={{ marginTop: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
                   id="register-next-step-0"
                 >
                   Continue <FaChevronRight size={18} />
@@ -334,31 +334,33 @@ export default function Register() {
                   <span className="form-hint">Recommended for account recovery</span>
                 </div>
 
-                <div className="form-group">
-                  <label className="form-label" htmlFor="reg-address">Physical Address *</label>
-                  <div style={{ position: 'relative' }}>
-                    <FaMapMarkerAlt size={17} style={{
-                      position: 'absolute', left: '14px', top: '50%',
-                      transform: 'translateY(-50%)', color: 'var(--gray-400)', pointerEvents: 'none',
-                    }} />
-                    <input
-                      id="reg-address"
-                      className="form-input"
-                      type="text"
-                      name="address"
-                      placeholder="e.g. Molyko, Buea"
-                      value={form.address}
-                      onChange={handleChange}
-                      style={{ paddingLeft: '42px' }}
-                    />
+                {form.role === 'supplier' && (
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="reg-address">Physical Address *</label>
+                    <div style={{ position: 'relative' }}>
+                      <FaMapMarkerAlt size={17} style={{
+                        position: 'absolute', left: '14px', top: '50%',
+                        transform: 'translateY(-50%)', color: 'var(--gray-400)', pointerEvents: 'none',
+                      }} />
+                      <input
+                        id="reg-address"
+                        className="form-input"
+                        type="text"
+                        name="address"
+                        placeholder="e.g. Molyko, Buea"
+                        value={form.address}
+                        onChange={handleChange}
+                        style={{ paddingLeft: '42px' }}
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-                  <button type="button" className="btn btn-secondary" onClick={prevStep} id="register-back-1">
+                  <button type="button" className="btn btn-secondary rounded-pill py-3 px-4" onClick={prevStep} id="register-back-1">
                     Back
                   </button>
-                  <button type="button" className="btn btn-primary btn-block" onClick={nextStep} id="register-next-step-1">
+                  <button type="button" className="btn btn-primary rounded-pill w-100 py-3" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }} onClick={nextStep} id="register-next-step-1">
                     Continue <FaChevronRight size={18} />
                   </button>
                 </div>
@@ -452,14 +454,15 @@ export default function Register() {
                 </div>
 
                 <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-                  <button type="button" className="btn btn-secondary" onClick={prevStep} id="register-back-2">
+                  <button type="button" className="btn btn-secondary rounded-pill py-3 px-4" onClick={prevStep} id="register-back-2">
                     Back
                   </button>
                   <button
                     type="submit"
-                    className="btn btn-primary btn-block"
+                    className="btn btn-primary rounded-pill w-100 py-3"
                     disabled={loading}
                     id="register-submit-btn"
+                    style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
                   >
                     {loading ? (
                       <>

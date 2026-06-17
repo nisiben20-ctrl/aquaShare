@@ -6,7 +6,7 @@ A web platform connecting residents with water suppliers in the Dirty South loca
 
 ## Stack
 
-- **Frontend:** React
+- **Frontend:** React + Vite
 - **Backend:** PHP 8.2 (REST API)
 - **Database:** MariaDB 10.4 (MySQLi)
 - **Notifications:** Africa's Talking SMS API (fire-and-forget, no DB storage)
@@ -17,22 +17,22 @@ A web platform connecting residents with water suppliers in the Dirty South loca
 
 ```
 aquaShare/
-├── php/                  # Backend API server
-│   ├── assets/
-│   │   ├── config.php        # DB credentials, constants
-│   │   ├── advanceSQL.php    # DB abstraction (advanceSelect, advanceInsert, advanceUpdate, advanceDelete)
-│   │   └── misc.php          # Cookie and timezone helpers
-│   ├── init/
-│   │   ├── fxns.php          # Core functions: connectDB, Error, Result, authenticationCheck, logout
-│   │   ├── auth/             # Registration, login, profile creation
-│   │   └── communication/    # In-app messaging (send, get, markread)
-│   ├── db/
-│   │   ├── aquashare.sql     # Full database schema
-│   │   └── setup/            # Browser-based DB installer
-│   ├── demos/
-│   │   └── index.html        # API test UI for all modules
-│   └── img.php               # Image serving endpoint
-└── (react app root)      # Frontend — React
+├── backend/                  # Backend API server
+│   ├── admin-module/         # Admin features
+│   ├── auth-module/          # Registration, login
+│   ├── communication-module/ # In-app messaging (send, get, markread)
+│   ├── rating-module/        # Ratings and reviews
+│   ├── request-module/       # Request creation and management
+│   ├── search-module/        # Search functionality
+│   ├── supplier-module/      # Supplier availability and prices
+│   ├── user-module/          # User profile management
+│   └── shared/               # Shared logic, database connection, config
+├── database/                 # Database schema files
+│   └── schema.sql
+├── frontend/                 # Frontend — React
+│   ├── src/
+│   │   ├── services/api.js   # API service connecting to backend
+│   │   └── pages/            # React UI components
 ```
 
 ---
@@ -41,7 +41,7 @@ aquaShare/
 
 | Table | Description |
 |---|---|
-| `user` | All users — role: `resident`, `supplier`, `admin` |
+| `users` | All users — role: `resident`, `supplier`, `admin` |
 | `resident_profile` | Address and landmark for residents |
 | `supplier_profile` | Price, availability, delivery info, WhatsApp for suppliers |
 | `request` | Water requests from resident to supplier |
@@ -56,54 +56,44 @@ aquaShare/
 
 **Option A — PHP built-in server (recommended for dev):**
 ```bash
-cd php
-php -S localhost:5400
+cd backend
+php -S 127.0.0.1:5400
 ```
-Then visit `http://localhost:5400/demos/` to test the API.
+This runs the PHP backend on port 5400.
 
 **Option B — MAMP/XAMPP:**
-1. Place the project in your server's `htdocs` (XAMPP) or `htdocs` (MAMP) folder
-2. Start Apache + MySQL from the MAMP/XAMPP control panel
+1. Place the project in your server's `htdocs` (XAMPP) or `htdocs` (MAMP) folder.
+2. Start Apache + MySQL from the MAMP/XAMPP control panel.
 
 **Database install:**
-1. Visit `http://localhost:{port}/db/setup/`
-2. Enter your MySQL credentials and click **Install Database**
+Import the `database/schema.sql` into your MySQL instance:
+```bash
+mysql -u root -p aquashare < database/schema.sql
+```
 
 **Config:**
-Update `php/assets/config.php` with your DB credentials if needed.
+Update `backend/shared/config/config.php` with your DB credentials if needed.
 ```php
 const DB_HOST = '127.0.0.1',  // use 127.0.0.1, not localhost
       DB_USER = 'root',
-      DB_PASS = '',
+      DB_PASS = 'root',
       DB_NAME = 'aquashare';
 ```
-
-> Always use `127.0.0.1` as the DB host — `localhost` causes Unix socket errors on MAMP/XAMPP.
 
 ---
 
 ## Modules
 
-### Auth — `php/init/auth/`
-- `registration.php` — create a new user account
-- `index.php` — login, sets session
-- `createprofile.php` — create resident or supplier profile (role-aware)
+The backend is strictly divided into modules. Each module has its own `README.md` file detailing the endpoints:
 
-See [`php/init/auth/README.md`](php/init/auth/README.md) for full API docs.
-
-### Communication — `php/init/communication/`
-- `send.php` — send a message (text / image / location) in a request thread
-- `get.php` — fetch all messages in a thread, marks other party's messages as read
-- `markread.php` — explicitly mark messages as read
-
-See [`php/init/communication/README.md`](php/init/communication/README.md) for full API docs.
-
-### Image Serving — `php/img.php`
-Serves uploaded images securely.
-```
-GET /php/img.php?f=messages/filename.png
-```
-Only serves files from `assets/uploads/`. Rejects non-image files and path traversal attempts.
+- **Admin Module:** `backend/admin-module/README.md`
+- **Auth Module:** `backend/auth-module/README.md`
+- **Communication Module:** `backend/communication-module/README.md`
+- **Rating Module:** `backend/rating-module/README.md`
+- **Request Module:** `backend/request-module/README.md`
+- **Search Module:** `backend/search-module/README.md`
+- **Supplier Module:** `backend/supplier-module/README.md`
+- **User Module:** `backend/user-module/README.md`
 
 ---
 
@@ -113,7 +103,7 @@ Only serves files from `assets/uploads/`. Rejects non-image files and path trave
 |---|---|
 | `resident` | Browse suppliers, send requests, message, rate |
 | `supplier` | Receive requests, message, update availability |
-| `admin` | View all data |
+| `admin` | View all data, ban users |
 
 ---
 

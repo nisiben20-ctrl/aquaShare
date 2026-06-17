@@ -376,7 +376,7 @@ export default function Chat() {
                 </div>
               ) : (
                 messages.map((msg) => {
-                  const isOwn = msg.sender_id === user.id;
+                  const isOwn = Number(msg.sender_id) === Number(user.id);
                   
                   return (
                     <div

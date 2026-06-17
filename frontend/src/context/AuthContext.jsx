@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext(null);
@@ -51,8 +52,11 @@ export function AuthProvider({ children }) {
     localStorage.removeItem(STORAGE_KEY + '_profile');
   };
 
-  const updateProfile = (profileData) => {
+  const updateProfile = (profileData, userData = null) => {
     setProfile(profileData);
+    if (userData) {
+      setUser(userData);
+    }
   };
 
   const isAuthenticated = !!user;
